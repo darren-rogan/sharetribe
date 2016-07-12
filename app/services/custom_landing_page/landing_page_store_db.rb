@@ -1,10 +1,50 @@
 module CustomLandingPage
-  module LandingPageStore
+  module LandingPageStoreDB
 
     class LandingPage < ActiveRecord::Base; end
     class LandingPageVersion < ActiveRecord::Base; end
 
     module_function
+
+    #
+    # Common methods
+    #
+
+    def released_version(cid)
+      enabled, released_version = LandingPage.where(community_id: cid)
+                                  .pluck(:enabled, :released_version)
+                                  .first
+      if !enabled
+        raise LandingPageConfigurationError.new("Landing page not enabled. community_id: #{cid}.")
+      elsif released_version.nil?
+        raise LandingPageConfigurationError.new("Landing page version not specified.")
+      end
+
+      released_version
+    end
+
+    def load_structure(cid, version)
+      content = LandingPageVersion.where(community_id: cid, version: version)
+                .pluck(:content)
+                .first
+      if content.blank?
+        raise LandingPageContentNotFound.new("Content missing. community_id: #{cid}, version: #{version}.")
+      end
+
+      JSON.parse(content)
+    end
+
+    def enabled?(cid)
+      if RequestStore.store.key?(:clp_enabled)
+        RequestStore.store[:clp_enabled]
+      else
+        RequestStore.store[:clp_enabled] = _enabled?(cid)
+      end
+    end
+
+    #
+    # Database specific methods
+    #
 
     def create_landing_page!(cid)
       LandingPage.create(community_id: cid)
@@ -49,37 +89,7 @@ module CustomLandingPage
       end
     end
 
-    def released_version(cid)
-      enabled, released_version = LandingPage.where(community_id: cid)
-                                  .pluck(:enabled, :released_version)
-                                  .first
-      if !enabled
-        raise LandingPageConfigurationError.new("Landing page not enabled. community_id: #{cid}.")
-      elsif released_version.nil?
-        raise LandingPageConfigurationError.new("Landing page version not specified.")
-      end
-
-      released_version
-    end
-
-    def load_structure(cid, version)
-      content = LandingPageVersion.where(community_id: cid, version: version)
-                .pluck(:content)
-                .first
-      if content.blank?
-        raise LandingPageContentNotFound.new("Content missing. community_id: #{cid}, version: #{version}.")
-      end
-
-      JSON.parse(content)
-    end
-
-    def enabled?(cid)
-      if RequestStore.store.key?(:clp_enabled)
-        RequestStore.store[:clp_enabled]
-      else
-        RequestStore.store[:clp_enabled] = _enabled?(cid)
-      end
-    end
+    # private
 
     def _enabled?(cid)
       enabled, released_version = LandingPage
