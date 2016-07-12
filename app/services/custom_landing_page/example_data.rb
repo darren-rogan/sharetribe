@@ -15,8 +15,8 @@ module CustomLandingPage
 
   "page": {
     "twitter_handle": {"type": "marketplace_data", "id": "twitter_handle"},
-    "twitter_image": {"type": "assets", "id": "hero_background_image"},
-    "facebook_image": {"type": "assets", "id": "hero_background_image"},
+    "twitter_image": {"type": "assets", "id": "myheroimage"},
+    "facebook_image": {"type": "assets", "id": "myheroimage"},
     "title": {"type": "marketplace_data", "id": "page_title"},
     "description": {"type": "marketplace_data", "id": "description"},
     "publisher": {"type": "marketplace_data", "id": "name"},
